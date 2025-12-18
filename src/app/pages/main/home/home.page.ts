@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
+import { FirebaseService } from 'src/app/services/firebase.service';
+import { UtilsService } from 'src/app/services/utils.service';
 
 @Component({
   standalone: false,
@@ -8,9 +10,14 @@ import { Component, OnInit } from '@angular/core';
 })
 export class HomePage implements OnInit {
 
+  firesbaseSvc = inject(FirebaseService);
+  utilsSvc = inject(UtilsService);
+
   constructor() { }
 
   ngOnInit() {
   }
-
+  singOut() {
+    this.firesbaseSvc.signOut();
+  }
 }

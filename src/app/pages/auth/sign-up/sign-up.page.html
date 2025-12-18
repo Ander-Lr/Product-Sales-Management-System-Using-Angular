@@ -16,7 +16,7 @@
 
             <!---Si la persona toco el input correo y tiene erroress--->
             <div class="validatiors" *ngIf="form.controls.name.errors && form.controls.name.touched">
-                <div *ngIf="form.controls.name.errors?.['required']">El nombre es requerido</div>
+                <div *ngIf="form.controls.name.errors?.['required']">Este campo es requerido</div>
                 <div *ngIf="form.controls.name.errors?.['minlength']">El nombre debe tern almenos 4 caracteres</div>
             </div>
             <!---Email--->

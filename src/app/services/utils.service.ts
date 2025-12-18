@@ -8,6 +8,7 @@ import {
   ToastController,
   ToastOptions,
 } from '@ionic/angular';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
 @Injectable({
   providedIn: 'root',
@@ -18,6 +19,21 @@ export class UtilsService {
   modalCtrl = inject(ModalController);
 
   router = inject(Router);
+
+
+
+async takePicture(promptLabelHeader: string) {
+  return await Camera.getPhoto({
+    quality: 90,
+    allowEditing: true,
+    resultType: CameraResultType.DataUrl,
+    source: CameraSource.Prompt,
+    promptLabelHeader,
+    promptLabelPhoto: 'Seleccion una Imagen',
+    promptLabelPicture: 'Toma una Foto',
+  });
+
+};
 
   /*Loading*/
   loading() {
@@ -48,8 +64,14 @@ export class UtilsService {
   /*  Modal  */
   async presentModal(opts: ModalOptions) {
     const modal = await this.modalCtrl.create(opts);
-  
+
     await modal.present();
-  
+
+    const { data } = await modal.onDidDismiss();
+
+    if (data) return data;
+  }
+  dismissModal(data?: any) {
+    return this.modalCtrl.dismiss(data);
   }
 }

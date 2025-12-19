@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { inject } from '@angular/core/primitives/di';
 import { Router } from '@angular/router';
 import {
+  AlertController,
+  AlertOptions,
   LoadingController,
   ModalController,
   ModalOptions,
@@ -17,9 +19,8 @@ export class UtilsService {
   loadingCtrl = inject(LoadingController);
   toastCtrl = inject(ToastController);
   modalCtrl = inject(ModalController);
-
   router = inject(Router);
-
+  alertCtrl = inject(AlertController);
 
 
 async takePicture(promptLabelHeader: string) {
@@ -34,6 +35,10 @@ async takePicture(promptLabelHeader: string) {
   });
 
 };
+async presentAlert(opts?: AlertOptions) {
+  const alert = await this.alertCtrl.create(opts);
+  await alert.present();
+}
 
   /*Loading*/
   loading() {

@@ -1,8 +1,9 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { User } from '../../../models/user.models';
 import { FirebaseService } from 'src/app/services/firebase.service';
 import { UtilsService } from 'src/app/services/utils.service';
+import { Product } from 'src/app/models/product.model';
 
 @Component({
   standalone: false,
@@ -11,12 +12,15 @@ import { UtilsService } from 'src/app/services/utils.service';
   styleUrls: ['./add-update-product.component.scss'],
 })
 export class AddUpdateProductComponent implements OnInit {
+
+  @Input() product: Product; 
+
   form = new FormGroup({
     id: new FormControl(''),
     image: new FormControl('', [Validators.required]),
     name: new FormControl('', [Validators.required, Validators.minLength(4)]),
-    price: new FormControl('', [Validators.required, Validators.min(0)]),
-    soldUnits: new FormControl('', [Validators.required, Validators.min(0)]),
+    price: new FormControl(null, [Validators.required, Validators.min(0)]),
+    soldUnits: new FormControl(null, [Validators.required, Validators.min(0)]),
   });
 
   firesbaseSvc = inject(FirebaseService);
@@ -26,6 +30,9 @@ export class AddUpdateProductComponent implements OnInit {
 
   ngOnInit() {
     this.user = this.utilsSvc.getFromLocalStorage('user');
+    if (this.product) {
+      this.form.setValue(this.product);
+    }
   }
 
   /* Toma/Seleccion una imagen*/
@@ -34,8 +41,18 @@ export class AddUpdateProductComponent implements OnInit {
     this.form.controls.image.setValue(URL);
   }
 
-  async submit() {
+  submit() {
     if (this.form.valid) {
+      if (this.product) {
+        this.updateProduct();
+      } else {
+        this.createProduct();
+      }
+    }
+  }
+  // Agregar producto
+  async createProduct() {
+
       let path = `users/${this.user.uid}/products`;
 
       const loading = await this.utilsSvc.loading();
@@ -79,6 +96,61 @@ export class AddUpdateProductComponent implements OnInit {
         .finally(() => {
           loading.dismiss();
         });
-    }
+    
   }
+
+  // Actualizar producto
+  async updateProduct() {
+
+      let path = `users/${this.user.uid}/products/${this.product.id}`;
+
+      const loading = await this.utilsSvc.loading();
+      await loading.present();
+      
+      // Si cambio la imagen subir la nueva y obtener la URL
+      if (this.form.value.image != this.product.image) {
+        let dataUrl = this.form.value.image;  
+        let imagePath = await this.firesbaseSvc.getFilePath(this.product.image);
+        let imageUrl = await this.firesbaseSvc.uploadImage(imagePath, dataUrl!);
+        this.form.controls.image.setValue(imageUrl);
+      }
+      delete this.form.value.id;
+      
+
+      this.firesbaseSvc
+        .updateDocument(path, this.form.value)
+        .then(async (res) => {
+          await this.firesbaseSvc.updateUser(this.form.value.name);
+
+          this.utilsSvc.presentToast({
+            message: 'Producto actualizado exitosamente',
+            duration: 1500,
+            color: 'primary',
+            position: 'middle',
+            icon: 'checkmark-circle-outline',
+          });
+          this.utilsSvc.dismissModal({
+            success: true,
+          });
+        })
+        .catch((err) => {
+          console.error(err);
+
+          
+
+          this.utilsSvc.presentToast({
+            message: err.message,
+            duration: 3000,
+            color: 'success',
+            position: 'middle',
+            icon: 'alert-circle-outline',
+          });
+        })
+        .finally(() => {
+          loading.dismiss();
+        });
+    
+  }
+
+  
 }

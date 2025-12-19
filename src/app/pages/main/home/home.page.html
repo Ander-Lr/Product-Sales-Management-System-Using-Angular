@@ -23,11 +23,11 @@
       <!--Opciones-->
       <ion-item-options>
         <!--Opcion Crear-->
-        <ion-item-option>
+        <ion-item-option (click)="addUpdateProduct(p)">
           <ion-icon class="option-btn" name="create-outline"></ion-icon>
         </ion-item-option>
         <!--Opcion Eliminar-->
-        <ion-item-option color="danger">
+        <ion-item-option (click)="confirmDeleteProduct(p)" color="danger">
           <ion-icon class="option-btn" name="trash-outline"></ion-icon>
         </ion-item-option>
       </ion-item-options>

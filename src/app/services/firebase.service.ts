@@ -17,7 +17,9 @@ import {
   addDoc,
   collection,
   collectionData,
-  query
+  query,
+  updateDoc,
+  deleteDoc,
 } from '@angular/fire/firestore';
 import { UtilsService } from './utils.service';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
@@ -26,6 +28,7 @@ import {
   uploadString,
   ref,
   getDownloadURL,
+  deleteObject,
 } from 'firebase/storage';
 
 @Injectable({
@@ -73,7 +76,7 @@ export class FirebaseService {
    */
   getCollectionData(path: string, collectionQuery?: any) {
     const ref = collection(getFirestore(), path);
-    return collectionData(query(ref, collectionQuery), {idField: 'id'});
+    return collectionData(query(ref, collectionQuery), { idField: 'id' });
   }
 
   // setear documento
@@ -81,7 +84,16 @@ export class FirebaseService {
     return setDoc(doc(getFirestore(), path), data);
   }
 
-  // obtener documento
+    // Actualizar documento
+  updateDocument(path: string, data: any) {
+    return updateDoc(doc(getFirestore(), path), data);
+  }
+
+    // Eliminar documento
+  deleteDocument(path: string) {
+    return deleteDoc(doc(getFirestore(), path));
+  }
+  // Obtener documento
   async getDocument(path: string) {
     return (await getDoc(doc(getFirestore(), path))).data();
   }
@@ -100,5 +112,15 @@ export class FirebaseService {
         return getDownloadURL(ref(getStorage(), path));
       }
     );
+  }
+
+  // Obtener ruta de la imagen con su URL
+  async getFilePath(url: string) {
+    return ref(getStorage(), url).fullPath;
+  }
+
+  // Eliminar archivo
+  deleteFile(path: string) {
+    return deleteObject(ref(getStorage(), path));
   }
 }

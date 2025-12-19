@@ -4,6 +4,7 @@ import { User } from '../../../models/user.models';
 import { FirebaseService } from 'src/app/services/firebase.service';
 import { UtilsService } from 'src/app/services/utils.service';
 import { Product } from 'src/app/models/product.model';
+import { ParseFlags } from '@angular/compiler';
 
 @Component({
   standalone: false,
@@ -12,8 +13,7 @@ import { Product } from 'src/app/models/product.model';
   styleUrls: ['./add-update-product.component.scss'],
 })
 export class AddUpdateProductComponent implements OnInit {
-
-  @Input() product: Product; 
+  @Input() product: Product;
 
   form = new FormGroup({
     id: new FormControl(''),
@@ -50,107 +50,101 @@ export class AddUpdateProductComponent implements OnInit {
       }
     }
   }
+  setNumberInputs() {
+    let { soldUnits, price } = this.form.controls;
+    if (soldUnits.value) soldUnits.setValue(parseFloat(soldUnits.value));
+    if (price.value) price.setValue(parseFloat(price.value));
+  }
   // Agregar producto
   async createProduct() {
+    let path = `users/${this.user.uid}/products`;
 
-      let path = `users/${this.user.uid}/products`;
+    const loading = await this.utilsSvc.loading();
+    await loading.present();
+    // Subir la imagen y obtener url
 
-      const loading = await this.utilsSvc.loading();
-      await loading.present();
-      // Subir la imagen y obtener url
+    let dataUrl = this.form.value.image;
+    let imagePath = `${this.user.uid}/${Date.now()}`;
+    let imageUrl = await this.firesbaseSvc.uploadImage(imagePath, dataUrl!);
+    this.form.controls.image.setValue(imageUrl);
+    delete this.form.value.id;
 
-      let dataUrl = this.form.value.image;
-      let imagePath = `${this.user.uid}/${Date.now()}`;
-      let imageUrl = await this.firesbaseSvc.uploadImage(imagePath, dataUrl!);
-      this.form.controls.image.setValue(imageUrl);
-      delete this.form.value.id;
-
-      this.firesbaseSvc
-        .addDocument(path, this.form.value)
-        .then(async (res) => {
-          await this.firesbaseSvc.updateUser(this.form.value.name);
-          this.utilsSvc.presentToast({
-            message: 'Producto agregado exitosamente',
-            duration: 1500,
-            color: 'primary',
-            position: 'middle',
-            icon: 'checkmark-circle-outline',
-          });
-          this.utilsSvc.dismissModal({
-            success: true,
-          });
-        })
-        .catch((err) => {
-          console.error(err);
-
-          
-
-          this.utilsSvc.presentToast({
-            message: err.message,
-            duration: 3000,
-            color: 'success',
-            position: 'middle',
-            icon: 'alert-circle-outline',
-          });
-        })
-        .finally(() => {
-          loading.dismiss();
+    this.firesbaseSvc
+      .addDocument(path, this.form.value)
+      .then(async (res) => {
+        await this.firesbaseSvc.updateUser(this.form.value.name);
+        this.utilsSvc.presentToast({
+          message: 'Producto agregado exitosamente',
+          duration: 1500,
+          color: 'primary',
+          position: 'middle',
+          icon: 'checkmark-circle-outline',
         });
-    
+        this.utilsSvc.dismissModal({
+          success: true,
+        });
+      })
+      .catch((err) => {
+        console.error(err);
+
+        this.utilsSvc.presentToast({
+          message: err.message,
+          duration: 3000,
+          color: 'success',
+          position: 'middle',
+          icon: 'alert-circle-outline',
+        });
+      })
+      .finally(() => {
+        loading.dismiss();
+      });
   }
 
   // Actualizar producto
   async updateProduct() {
+    let path = `users/${this.user.uid}/products/${this.product.id}`;
 
-      let path = `users/${this.user.uid}/products/${this.product.id}`;
+    const loading = await this.utilsSvc.loading();
+    await loading.present();
 
-      const loading = await this.utilsSvc.loading();
-      await loading.present();
-      
-      // Si cambio la imagen subir la nueva y obtener la URL
-      if (this.form.value.image != this.product.image) {
-        let dataUrl = this.form.value.image;  
-        let imagePath = await this.firesbaseSvc.getFilePath(this.product.image);
-        let imageUrl = await this.firesbaseSvc.uploadImage(imagePath, dataUrl!);
-        this.form.controls.image.setValue(imageUrl);
-      }
-      delete this.form.value.id;
-      
+    // Si cambio la imagen subir la nueva y obtener la URL
+    if (this.form.value.image != this.product.image) {
+      let dataUrl = this.form.value.image;
+      let imagePath = await this.firesbaseSvc.getFilePath(this.product.image);
+      let imageUrl = await this.firesbaseSvc.uploadImage(imagePath, dataUrl!);
+      this.form.controls.image.setValue(imageUrl);
+    }
+    delete this.form.value.id;
 
-      this.firesbaseSvc
-        .updateDocument(path, this.form.value)
-        .then(async (res) => {
-          await this.firesbaseSvc.updateUser(this.form.value.name);
+    this.firesbaseSvc
+      .updateDocument(path, this.form.value)
+      .then(async (res) => {
+        await this.firesbaseSvc.updateUser(this.form.value.name);
 
-          this.utilsSvc.presentToast({
-            message: 'Producto actualizado exitosamente',
-            duration: 1500,
-            color: 'primary',
-            position: 'middle',
-            icon: 'checkmark-circle-outline',
-          });
-          this.utilsSvc.dismissModal({
-            success: true,
-          });
-        })
-        .catch((err) => {
-          console.error(err);
-
-          
-
-          this.utilsSvc.presentToast({
-            message: err.message,
-            duration: 3000,
-            color: 'success',
-            position: 'middle',
-            icon: 'alert-circle-outline',
-          });
-        })
-        .finally(() => {
-          loading.dismiss();
+        this.utilsSvc.presentToast({
+          message: 'Producto actualizado exitosamente',
+          duration: 1500,
+          color: 'primary',
+          position: 'middle',
+          icon: 'checkmark-circle-outline',
         });
-    
-  }
+        this.utilsSvc.dismissModal({
+          success: true,
+        });
+      })
+      .catch((err) => {
+        console.error(err);
 
-  
+        this.utilsSvc.presentToast({
+          message: err.message,
+          duration: 3000,
+          color: 'success',
+          position: 'middle',
+          icon: 'alert-circle-outline',
+        });
+      })
+      .finally(() => {
+        loading.dismiss();
+      });
+  }
 }
